@@ -167,6 +167,57 @@ class CollectionEngine extends BaseEngine
     }
 
     /**
+     * Get operator from string
+     *
+     * @param string $string
+     * @return string|null
+     */
+    private function getOperator($string)
+    {
+        switch ($string){
+            case strpos($string,'>=') === 0:
+                $operator = '>=';
+                break;
+            case strpos($string,'>') === 0:
+                $operator = '>';
+                break;
+            case strpos($string,'<=') === 0:
+                $operator = '<=';
+                break;
+            case strpos($string,'<') === 0:
+                $operator = '<';
+                break;
+            default:
+                $operator =  null;
+                break;
+        }
+
+        return $operator;
+    }
+
+    private function evaluateExpression($value, $keyword, $operator)
+    {
+        if ($operator) {
+            $operand = (Float) str_replace($operator, '', $keyword);
+
+            switch ($operator) {
+                case '>':
+                    return $value > $operand;
+                    break;
+                case '>=':
+                    return $value >= $operand;
+                    break;
+                case '<':
+                    return $value < $operand;
+                    break;
+                case '<=':
+                    return $value <= $operand;
+                    break;
+            }
+        }
+    }
+
+    /**
      * Perform column search.
      *
      * @return void
@@ -187,6 +238,11 @@ class CollectionEngine extends BaseEngine
                         $data = $this->serialize($row);
 
                         $value = Arr::get($data, $column);
+
+                        $operator = $this->getOperator($keyword);
+                        if ($operator) {
+                            return $this->evaluateExpression($value, $keyword, $operator);
+                        }
 
                         if ($this->isCaseInsensitive()) {
                             if ($regex) {
